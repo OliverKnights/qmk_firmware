@@ -30,6 +30,7 @@ enum planck_keycodes {
   QWERTY = SAFE_RANGE,
   QMKBEST,
   Z_GUI,
+  SWITCH_COLN,
   MY_GUI_TOG,
   MY_GUI_TOG_BACK,
   MY_RAISE,
@@ -41,8 +42,54 @@ layer_state_t layer_state_set_user(layer_state_t state) {
 
 int lower_should_be_on = 0;
 int gui_should_be_active = 0;
+int is_shifted = 0;
+int is_ctrl = 0;
+int is_gui = 0;
+int is_alt = 0;
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+  if (keycode == KC_LSFT || keycode == KC_RSFT) {
+    if (record->event.pressed) {
+      is_shifted = 1;
+    } else {
+      is_shifted = 0;
+    }
+  }
+
+  if (keycode == KC_RCTL || keycode == KC_LCTL) {
+    if (record->event.pressed) {
+      is_ctrl = 1;
+    } else {
+      is_ctrl = 0;
+    }
+  }
+
+  if (keycode == KC_RGUI || keycode == KC_LGUI) {
+    if (record->event.pressed) {
+      is_gui = 1;
+    } else {
+      is_gui = 0;
+    }
+  }
+
+  if (keycode == KC_LALT || keycode == KC_RALT) {
+    if (record->event.pressed) {
+      is_alt = 1;
+    } else {
+      is_alt = 0;
+    }
+  }
+
+  if (IS_LAYER_ON(_LOWER) && IS_LAYER_ON(_RAISE)) {
+    xprintf("KL: col=%02d, row=%02d, pressed=%d layer=ADJUS shift=%d g=%d a=%d c=%d\n", record->event.key.col, record->event.key.row, record->event.pressed, is_shifted, is_gui, is_alt, is_ctrl);
+  } else if (IS_LAYER_ON(_LOWER)) {
+    xprintf("KL: col=%02d, row=%02d, pressed=%d layer=LOWER shift=%d g=%d a=%d c=%d\n", record->event.key.col, record->event.key.row, record->event.pressed, is_shifted, is_gui, is_alt, is_ctrl);
+  } else if (IS_LAYER_ON(_RAISE)) {
+    xprintf("KL: col=%02d, row=%02d, pressed=%d layer=RAISE shift=%d g=%d a=%d c=%d\n", record->event.key.col, record->event.key.row, record->event.pressed, is_shifted, is_gui, is_alt, is_ctrl);
+  } else {
+    xprintf("KL: col=%02d, row=%02d, pressed=%d layer=QWERT shift=%d g=%d a=%d c=%d\n", record->event.key.col, record->event.key.row, record->event.pressed, is_shifted, is_gui, is_alt, is_ctrl);
+  }
+
     switch (keycode) {
     case QMKBEST:
         if (record->event.pressed) {
@@ -69,6 +116,21 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
           } else {
             unregister_code(KC_Z);
           }
+        }
+        break;
+    case SWITCH_COLN:
+        if (record->event.pressed) {
+          if (is_shifted == 1) {
+            unregister_code(KC_LSFT);
+            unregister_code(KC_RSFT);
+            register_code(KC_SCLN);
+          } else {
+            register_code(KC_RSFT);
+            register_code(KC_SCLN);
+            unregister_code(KC_RSFT);
+          }
+        } else {
+            unregister_code(KC_SCLN);
         }
         break;
     case MY_GUI_TOG:
@@ -124,23 +186,23 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 [_QWERTY] = LAYOUT_planck_grid(
-    _______, KC_Q   , KC_W   , KC_E   , KC_R      , KC_T  , KC_Y   , KC_U      , KC_I   , KC_O   , KC_P   , _______,
-    KC_ESC , KC_A   , KC_S   , KC_D   , KC_F      , KC_G  , KC_H   , KC_J      , KC_K   , KC_L   , KC_SCLN, KC_ENT ,
-    KC_LSFT, Z_GUI  , KC_X   , KC_C   , KC_V      , KC_B  , KC_N   , KC_M      , KC_COMM, KC_DOT , KC_SLSH, KC_RSFT,
-    _______, _______, _______, KC_LALT, MO(_LOWER), KC_SPC, KC_RCTL, MY_RAISE, _______, _______, _______, _______
+    _______, KC_Q   , KC_W   , KC_E   , KC_R      , KC_T  , KC_Y   , KC_U      , KC_I         , KC_O   , KC_P       , _______,
+    KC_ESC , KC_A   , KC_S   , KC_D   , KC_F      , KC_G  , KC_H   , KC_J      , KC_K         , KC_L   , SWITCH_COLN, KC_ENT ,
+    KC_LSFT, KC_Z   , KC_X   , KC_C   , KC_V      , KC_B  , KC_N   , KC_M      , RCTL(KC_SPC), KC_DOT , KC_SLSH    , KC_RSFT,
+    _______, _______, _______, KC_LALT, MO(_LOWER), KC_SPC, KC_RCTL, MO(_RAISE), KC_RGUI      , _______, _______    , _______
 ),
 
 [_LOWER] = LAYOUT_planck_grid(
-    _______, KC_0   , KC_7   , KC_8   , KC_9   , _______, _______, _______, _______, _______, _______, _______,
-    _______, _______, KC_4   , KC_5   , KC_6   , _______, _______, _______, KC_ESC , KC_TAB , KC_BSPC, _______,
-    _______, _______, KC_1   , KC_2   , KC_3   , _______, _______, _______, _______, _______, _______, _______,
+    _______, KC_0   , KC_7   , KC_8   , KC_9   , _______, _______, KC_Z   , KC_LBRC, KC_RBRC, KC_Q   , _______,
+    _______, _______, KC_4   , KC_5   , KC_6   , _______, _______, KC_ENT , KC_ESC , KC_TAB , KC_BSPC, _______,
+    _______, _______, KC_1   , KC_2   , KC_3   , _______, _______, _______, KC_COMM, KC_DOT , _______, _______,
     _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______
 ),
 
 [_RAISE] = LAYOUT_planck_grid(
-    _______, KC_EXLM, UK_AT  , KC_LCBR, KC_RCBR, UK_DQUO, _______, UK_PND , _______, _______, KC_ASTR, _______,
+    _______, KC_EXLM, UK_AT  , KC_LCBR, KC_RCBR, UK_DQUO, _______, UK_PND , KC_SCLN, KC_COLN, KC_ASTR, _______,
     _______, KC_TILD, KC_DLR , KC_LPRN, KC_RPRN, KC_QUOT, KC_PIPE, UK_PLUS, UK_MINS, KC_UNDS, KC_EQL , _______,
-    _______, KC_PERC, KC_CIRC, KC_LBRC, KC_RBRC, KC_GRV , KC_AMPR, KC_TILD, _______, _______, KC_BSLS, _______,
+    _______, KC_PERC, KC_CIRC, KC_LABK, KC_RABK, KC_GRV , KC_AMPR, KC_TILD, KC_QUES, KC_SLSH, KC_BSLS, _______,
     _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______
 ),
 
