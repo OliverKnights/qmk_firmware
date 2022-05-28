@@ -34,6 +34,7 @@ enum planck_keycodes {
   MY_GUI_TOG,
   MY_GUI_TOG_BACK,
   MY_RAISE,
+  MY_CTRL_ALT,
 };
 
 layer_state_t layer_state_set_user(layer_state_t state) {
@@ -179,6 +180,15 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
           layer_off(_RAISE);
         }
         break;
+    case MY_CTRL_ALT:
+        if (record->event.pressed) {
+            register_code(KC_RCTL);
+            register_code(KC_LALT);
+        } else {
+            unregister_code(KC_RCTL);
+            unregister_code(KC_LALT);
+        }
+        break;
     }
     return true;
 };
@@ -186,10 +196,10 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
 [_QWERTY] = LAYOUT_planck_grid(
-    KC_TAB , KC_Q   , KC_W   , KC_E   , KC_R      , KC_T  , KC_Y   , KC_U      , KC_I   , KC_O   , KC_P       , KC_BSPC,
-    KC_ESC , KC_A   , KC_S   , KC_D   , KC_F      , KC_G  , KC_H   , KC_J      , KC_K   , KC_L   , SWITCH_COLN, KC_ENT ,
-    KC_LSFT, KC_Z   , KC_X   , KC_C   , KC_V      , KC_B  , KC_N   , KC_M      , KC_COMM, KC_DOT , KC_SLSH    , KC_RSFT,
-    _______, _______, _______, KC_LALT, MO(_LOWER), KC_SPC, KC_RCTL, MO(_RAISE), KC_RGUI, _______, _______    , _______
+    KC_TAB , KC_Q   , KC_W       , KC_E   , KC_R      , KC_T  , KC_Y   , KC_U      , KC_I   , KC_O       , KC_P       , KC_BSPC,
+    KC_ESC , KC_A   , KC_S       , KC_D   , KC_F      , KC_G  , KC_H   , KC_J      , KC_K   , KC_L       , SWITCH_COLN, KC_ENT ,
+    KC_LSFT, KC_Z   , KC_X       , KC_C   , KC_V      , KC_B  , KC_N   , KC_M      , KC_COMM, KC_DOT     , KC_SLSH    , KC_RSFT,
+    _______, _______, MY_CTRL_ALT, KC_LALT, MO(_LOWER), KC_SPC, KC_RCTL, MO(_RAISE), KC_RGUI, MY_CTRL_ALT, _______    , _______
 ),
 
 [_LOWER] = LAYOUT_planck_grid(
